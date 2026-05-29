@@ -1,0 +1,39 @@
+# Build artifacts
+build/
+dist/
+*.spec
+__pycache__/
+*.pyc
+
+# Temp files
+*.heic_conv_*
+*_converted.jpg
+
+# Large files / images
+*.jpg
+*.jpeg
+*.png
+*.heic
+*.heif
+*.bmp
+*.tiff
+*.tif
+
+# Word documents (user data)
+*.docx
+
+# Excel files (user data)
+*.xlsx
+
+# Output
+matched_results.txt
+ocr_matched_files/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
