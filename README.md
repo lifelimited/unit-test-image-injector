@@ -46,16 +46,16 @@ Organize device photos into folders named by Serial Number:
 
 ```
 Photo_Root/
-├── WZP30149NFC/
-│   └── WZP30149NFC/
+├── WZP301000/
+│   └── WZP301000/
 │       ├── IMG_8402.JPG
 │       ├── IMG_8403.JPG
 │       └── 20260526_071125063_iOS.heic    ← auto-converted
-├── WZP30149NFE/
-│   └── WZP30149NFE/
+├── WZP308888/
+│   └── WZP308888/
 │       ├── IMG_8410.JPG
 │       └── IMG_8411.JPG
-└── WZP30149NFJ/
+└── WZP3914ZNNN/
     └── ...
 ```
 
