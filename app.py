@@ -8,6 +8,7 @@ Supports: .jpg .jpeg .png .bmp .tiff .heic .heif
 Auto-converts HEIC/HEIF (iPhone photos) to JPG.
 
 Changelog:
+  v1.3.1 — Fix image corruption in Word caused by missing DPI headers
   v1.3.0 — Smart Auto-Rotate using EasyOCR (GPU accelerated)
   v1.2.1 — Auto-Rotate images (EXIF based)
   v1.2.0 — Dynamic interactive table cell selection
@@ -18,7 +19,7 @@ Changelog:
 Usage: python app.py
 """
 
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 __app_name__ = "Unit Test Image Injector"
 
 import sys
@@ -58,8 +59,12 @@ def get_best_orientation(img_path: str, log_cb=None) -> int:
         try:
             _easyocr_reader = easyocr.Reader(['en'], gpu=True)
         except Exception as e:
-            if log_cb: log_cb(f"      [OCR Error] Failed to init EasyOCR: {e}")
-            return 0
+            if log_cb: log_cb(f"      [OCR Warning] GPU failed ({e}). Falling back to CPU...")
+            try:
+                _easyocr_reader = easyocr.Reader(['en'], gpu=False)
+            except Exception as e2:
+                if log_cb: log_cb(f"      [OCR Error] CPU fallback failed: {e2}")
+                return 0
 
     with PILImage.open(img_path) as img:
         img = img.convert('RGB')
@@ -108,7 +113,7 @@ def convert_heic_to_jpg(heic_path: str) -> str:
     img = ImageOps.exif_transpose(img) or img
     fd, tmp_path = tempfile.mkstemp(suffix='.jpg', prefix='heic_conv_')
     os.close(fd)
-    img.convert('RGB').save(tmp_path, 'JPEG', quality=90)
+    img.convert('RGB').save(tmp_path, 'JPEG', quality=90, dpi=(72, 72))
     _temp_files.append(tmp_path)
     return tmp_path
 
@@ -287,7 +292,7 @@ def run_injection(docx_path: str, sn_root: str, output_path: str,
                             if modified:
                                 fd, tmp_path = tempfile.mkstemp(suffix='.jpg', prefix='rot_')
                                 os.close(fd)
-                                img.convert('RGB').save(tmp_path, 'JPEG', quality=90)
+                                img.convert('RGB').save(tmp_path, 'JPEG', quality=90, dpi=(72, 72))
                                 _temp_files.append(tmp_path)
                                 img_path = tmp_path
                                 
@@ -298,7 +303,7 @@ def run_injection(docx_path: str, sn_root: str, output_path: str,
                                         img_smart = img2.rotate(best_angle, expand=True)
                                         fd, tmp_path_smart = tempfile.mkstemp(suffix='.jpg', prefix='ocr_rot_')
                                         os.close(fd)
-                                        img_smart.convert('RGB').save(tmp_path_smart, 'JPEG', quality=90)
+                                        img_smart.convert('RGB').save(tmp_path_smart, 'JPEG', quality=90, dpi=(72, 72))
                                         _temp_files.append(tmp_path_smart)
                                         img_path = tmp_path_smart
                                         log(f"      Smart-rotated (OCR) {best_angle}° for {os.path.basename(img_path)}")
