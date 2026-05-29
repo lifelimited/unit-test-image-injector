@@ -8,6 +8,7 @@ Supports: .jpg .jpeg .png .bmp .tiff .heic .heif
 Auto-converts HEIC/HEIF (iPhone photos) to JPG.
 
 Changelog:
+  v1.3.0 — Smart Auto-Rotate using EasyOCR (GPU accelerated)
   v1.2.1 — Auto-Rotate images (EXIF based)
   v1.2.0 — Dynamic interactive table cell selection
   v1.1.1 — Bug fixes and optimizations
@@ -17,7 +18,7 @@ Changelog:
 Usage: python app.py
 """
 
-__version__ = "1.2.1"
+__version__ = "1.3.0"
 __app_name__ = "Unit Test Image Injector"
 
 import sys
@@ -36,6 +37,58 @@ from pathlib import Path
 # ─────────────────────────────────────────────
 VALID_IMG_EXTS = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.heic', '.heif'}
 _temp_files = []
+
+
+# Use a global reader to avoid loading the model multiple times
+_easyocr_reader = None
+
+def get_best_orientation(img_path: str, log_cb=None) -> int:
+    """Uses EasyOCR to find the best rotation angle (0, 90, 180, 270) based on text confidence."""
+    global _easyocr_reader
+    try:
+        import easyocr
+        import numpy as np
+        from PIL import Image as PILImage
+    except ImportError as e:
+        if log_cb: log_cb(f"      [OCR Disabled] Missing dependencies: {e}")
+        return 0
+
+    if _easyocr_reader is None:
+        if log_cb: log_cb("      Initializing EasyOCR (GPU)... this might take a moment.")
+        try:
+            _easyocr_reader = easyocr.Reader(['en'], gpu=True)
+        except Exception as e:
+            if log_cb: log_cb(f"      [OCR Error] Failed to init EasyOCR: {e}")
+            return 0
+
+    with PILImage.open(img_path) as img:
+        img = img.convert('RGB')
+        best_angle = 0
+        best_score = -1
+
+        for angle in [0, 90, 180, 270]:
+            rotated = img.rotate(angle, expand=True)
+            img_np = np.array(rotated)
+            
+            # detail=1 returns bounding box, text, and confidence level
+            results = _easyocr_reader.readtext(img_np)
+            
+            # Score heavily based on long, high-confidence words
+            score = sum((prob * prob) * len(text) for _, text, prob in results if prob > 0.3)
+            
+            if score > best_score:
+                best_score = score
+                best_angle = angle
+
+        return best_angle
+
+
+def setup_temp_dir():
+    for f in _temp_files:
+        try:
+            os.remove(f)
+        except OSError:
+            pass
 
 
 def cleanup_temp_files():
@@ -94,7 +147,7 @@ def find_sn_folders(root: str, keyword: str = "WZP") -> dict:
 def run_injection(docx_path: str, sn_root: str, output_path: str,
                   keyword: str = "WZP",
                   sn_row_col: tuple = (5, 3), img_row_col: tuple = (12, 0),
-                  auto_rotate: bool = True,
+                  auto_rotate: bool = True, smart_rotate: bool = False,
                   log_callback=None, progress_callback=None,
                   cancel_event=None):
     """
@@ -217,20 +270,42 @@ def run_injection(docx_path: str, sn_root: str, output_path: str,
                     orig = os.path.basename(img_path)
                     img_path = convert_heic_to_jpg(img_path)
                     log(f"      Converted {orig} -> JPG")
-                elif auto_rotate:
+                elif auto_rotate or smart_rotate:
                     from PIL import Image as PILImage, ImageOps
                     try:
                         with PILImage.open(img_path) as img:
-                            img_rotated = ImageOps.exif_transpose(img)
-                            if img_rotated is not None and img_rotated != img:
+                            modified = False
+                            if auto_rotate:
+                                img_rotated = ImageOps.exif_transpose(img)
+                                if img_rotated is not None and img_rotated != img:
+                                    img = img_rotated
+                                    modified = True
+                                    log(f"      Auto-rotated (EXIF) {os.path.basename(img_path)}")
+
+                            # We must save the EXIF-rotated version before running OCR 
+                            # because get_best_orientation needs the path.
+                            if modified:
                                 fd, tmp_path = tempfile.mkstemp(suffix='.jpg', prefix='rot_')
                                 os.close(fd)
-                                img_rotated.convert('RGB').save(tmp_path, 'JPEG', quality=90)
+                                img.convert('RGB').save(tmp_path, 'JPEG', quality=90)
                                 _temp_files.append(tmp_path)
-                                log(f"      Auto-rotated {os.path.basename(img_path)}")
                                 img_path = tmp_path
+                                
+                            if smart_rotate:
+                                best_angle = get_best_orientation(img_path, log_cb=log)
+                                if best_angle != 0:
+                                    with PILImage.open(img_path) as img2:
+                                        img_smart = img2.rotate(best_angle, expand=True)
+                                        fd, tmp_path_smart = tempfile.mkstemp(suffix='.jpg', prefix='ocr_rot_')
+                                        os.close(fd)
+                                        img_smart.convert('RGB').save(tmp_path_smart, 'JPEG', quality=90)
+                                        _temp_files.append(tmp_path_smart)
+                                        img_path = tmp_path_smart
+                                        log(f"      Smart-rotated (OCR) {best_angle}° for {os.path.basename(img_path)}")
+                                        modified = True
+
                     except Exception as e:
-                        pass
+                        log(f"      Rotation Error for {os.path.basename(img_path)}: {e}")
 
                 width = Cm(14.0)
                 if img_idx == 0:
@@ -443,6 +518,7 @@ class App(tk.Tk):
         self.sn_row_col = (5, 3)
         self.img_row_col = (12, 0)
         self.auto_rotate_var = tk.BooleanVar(value=True)
+        self.smart_rotate_var = tk.BooleanVar(value=False)
         self._build_ui()
 
     def _build_ui(self):
@@ -506,11 +582,20 @@ class App(tk.Tk):
         )
         self.stop_btn.pack(side="left", padx=(10, 0))
 
+        opts_frame = ttk.Frame(btn_frame, style="BG.TFrame")
+        opts_frame.pack(side="left", padx=10)
+
         tk.Checkbutton(
-            btn_frame, text="Auto-Rotate Images (EXIF)", variable=self.auto_rotate_var,
+            opts_frame, text="Auto-Rotate (EXIF)", variable=self.auto_rotate_var,
             bg=C["bg"], fg=C["text"], selectcolor=C["card"], activebackground=C["bg"],
             activeforeground=C["text"], font=("Segoe UI", 9)
-        ).pack(side="left", padx=15)
+        ).pack(anchor="w")
+
+        tk.Checkbutton(
+            opts_frame, text="Smart Rotate (EasyOCR GPU)", variable=self.smart_rotate_var,
+            bg=C["bg"], fg="#a29bfe", selectcolor=C["card"], activebackground=C["bg"],
+            activeforeground="#a29bfe", font=("Segoe UI", 9, "bold")
+        ).pack(anchor="w")
 
         self.status_label = ttk.Label(btn_frame, text="Ready", style="Status.TLabel")
         self.status_label.pack(side="left", padx=15)
@@ -781,6 +866,7 @@ class App(tk.Tk):
                     keyword=keyword,
                     sn_row_col=self.sn_row_col, img_row_col=self.img_row_col,
                     auto_rotate=self.auto_rotate_var.get(),
+                    smart_rotate=self.smart_rotate_var.get(),
                     log_callback=self._log,
                     progress_callback=self._update_progress,
                     cancel_event=self._cancel_event

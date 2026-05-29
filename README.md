@@ -5,7 +5,7 @@
 ![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.2.1-orange)
+![Version](https://img.shields.io/badge/Version-1.3.0-orange)
 
 ## Overview
 
@@ -23,10 +23,17 @@ This tool automates the process of inserting device photos into Unit Test Word d
 
 ## Quick Start
 
-### Option 1: Run the .exe (Recommended)
+### Option 1: Run with Python / GPU (Recommended for v1.3.0)
 
-1. Download `Unit_Test_Image_Injector.exe` from the [Releases](../../releases) page
-2. Double-click to run
+Since v1.3.0 introduces a powerful AI OCR rotation feature (`easyocr` with PyTorch), compiling it to a standalone `.exe` would create a massive 3.5GB file. We strongly recommend running the app natively through Python to leverage your system's GPU.
+
+1. Double-click `run.bat` (or run `python app.py` from your terminal).
+2. The UI will instantly open, ready to use your GPU.
+
+### Option 2: Run the .exe (Legacy / EXIF-only)
+
+1. Download `Unit_Test_Image_Injector_v1.2.1.exe` from the [Releases](../../releases) page
+2. Double-click to run (Contains EXIF rotation but NO Smart OCR rotation)
 3. Select your files and click **▶ Run Injection**
 
 ### Option 2: Run from Python
@@ -140,6 +147,9 @@ The `.exe` will be created at `dist/Unit_Test_Image_Injector.exe`
 - No additional dependencies
 
 ## Changelog
+
+### v1.3.0
+- 🧠 **Smart Auto-Rotate (EasyOCR)** — Uses PyTorch and your GPU to detect the exact orientation of text on screens and forcefully rotates the image 90°, 180°, or 270° until perfectly readable.
 
 ### v1.2.1
 - 📸 **EXIF Auto-Rotate** — Automatically normalizes image orientations using EXIF data so they are upright in the document.
