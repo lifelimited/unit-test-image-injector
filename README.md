@@ -157,7 +157,7 @@ If you were experiencing bugs in earlier v1.3.0/v1.2.x releases, these have now 
 
 ## Changelog
 
-### v1.3.1 (Current)
+### v1.3.1 (Current) (Beta)
 - 🐛 **MS Word DPI Corruption Fix** — Fixed the infamous "picture can't be displayed" Red X bug.
 - 🐛 **HEIC EXIF Bug Fix** — Fixed bug where HEIC conversion accidentally stripped EXIF rotation data.
 - ⚡ **Auto-Installer & Defaults** — `run.bat` now automatically installs `easyocr`, `torch`, and `pillow-heif` dependencies on first launch. "Smart Rotate" is enabled by default.
