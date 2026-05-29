@@ -36,7 +36,7 @@ Since v1.3.0 introduces a powerful AI OCR rotation feature (`easyocr` with PyTor
 2. Double-click to run (Contains EXIF rotation but NO Smart OCR rotation)
 3. Select your files and click **▶ Run Injection**
 
-### Option 2: Run from Python
+### Option 3: Run from Python (Without EasyOCR)
 
 ```bash
 # Install dependencies
