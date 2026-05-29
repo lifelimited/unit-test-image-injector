@@ -3,9 +3,9 @@
 > Automatically insert device photos into Unit Test Word documents by matching Serial Number folders.
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white)
-![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-0078D6?logo=windows)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.3.0-orange)
+![Version](https://img.shields.io/badge/Version-1.3.2-orange)
 
 ## Overview
 
@@ -23,14 +23,17 @@ This tool automates the process of inserting device photos into Unit Test Word d
 
 ## Quick Start
 
-### Option 1: Run with Python / GPU (Recommended for v1.3.0)
- For the EXE file [Link] (https://drive.google.com/file/d/1DP1b5245Kz_tljlczBh7rCKrCpvGjelG/view?usp=sharing)
-
+### Option 1: Run with Python / GPU (Recommended for v1.3.2+)
  
-Since v1.3.0 introduces a powerful AI OCR rotation feature (`easyocr` with PyTorch), compiling it to a standalone `.exe` would create a massive 3.5GB file. We strongly recommend running the app natively through Python to leverage your system's GPU.
+Since recent versions introduce a powerful AI OCR rotation feature (`easyocr` with PyTorch), compiling it to a standalone `.exe` would create a massive 3GB+ file. We strongly recommend running the app natively through Python using our setup scripts.
 
-1. Double-click `run.bat` (or run `python app.py` from your terminal).
-2. The UI will instantly open, ready to use your GPU.
+**For Windows:**
+1. Double-click `setup_windows.bat` to install dependencies and create a local virtual environment. (You only need to do this once).
+2. Double-click `run_windows.bat` to launch the app!
+
+**For macOS:**
+1. Double-click `setup_mac.command` to install dependencies and create a local virtual environment. (You only need to do this once).
+2. Double-click `run_mac.command` to launch the app!
 
 ### Option 2: Run the .exe (Legacy / EXIF-only)
 
@@ -38,11 +41,15 @@ Since v1.3.0 introduces a powerful AI OCR rotation feature (`easyocr` with PyTor
 2. Double-click to run (Contains EXIF rotation but NO Smart OCR rotation)
 3. Select your files and click **▶ Run Injection**
 
-### Option 3: Run from Python (Without EasyOCR)
+### Option 3: Run from Python Manually (Command Line)
 
 ```bash
+# Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate  # Or `venv\Scripts\activate` on Windows
+
 # Install dependencies
-pip install python-docx pillow pillow-heif openpyxl
+pip install -r requirements.txt
 
 # Run the app
 python app.py
@@ -141,10 +148,12 @@ The `.exe` will be created at `dist/Unit_Test_Image_Injector.exe`
 
 ### For running from Python:
 - Python 3.10+
-- `python-docx` — Word document manipulation
-- `Pillow` — Image processing
-- `pillow-heif` — HEIC/HEIF support
-- `openpyxl` — Excel file reading (optional, for MAC scanner)
+- `requirements.txt` installs the following automatically:
+  - `python-docx` — Word document manipulation
+  - `Pillow` — Image processing
+  - `pillow-heif` — HEIC/HEIF support
+  - `easyocr` — Smart text orientation scanning
+  - `numpy` & `openpyxl`
 
 ### For running the .exe:
 - Windows 10/11
@@ -159,10 +168,15 @@ If you were experiencing bugs in earlier v1.3.0/v1.2.x releases, these have now 
 
 ## Changelog
 
-### v1.3.1 (Current) (Beta)
+### v1.3.2 (Current)
+- 🚀 **Universal Document Support** — AI rotation now handles generic documents (not just IP-phones) by dynamically scoring text density rather than strictly searching for rigid keywords.
+- 📦 **Automated Native Setup** — Introduced `setup_windows.bat` and `setup_mac.command` scripts alongside `requirements.txt` to eliminate the need for downloading a 3GB executable.
+- 🐛 **HEIC Skipping Bug Fix** — Repaired logic flaw where HEIC files were skipping internal format conversion loops.
+
+### v1.3.1
 - 🐛 **MS Word DPI Corruption Fix** — Fixed the infamous "picture can't be displayed" Red X bug.
 - 🐛 **HEIC EXIF Bug Fix** — Fixed bug where HEIC conversion accidentally stripped EXIF rotation data.
-- ⚡ **Auto-Installer & Defaults** — `run.bat` now automatically installs `easyocr`, `torch`, and `pillow-heif` dependencies on first launch. "Smart Rotate" is enabled by default.
+- ⚡ **Auto-Installer & Defaults** — Auto-installer improvements; "Smart Rotate" enabled by default.
 
 ### v1.3.0 (Beta)
 - 🧠 **Smart Auto-Rotate (EasyOCR)** — Uses PyTorch and your GPU to detect the exact orientation of text on screens and forcefully rotates the image 90°, 180°, or 270° until perfectly readable.
