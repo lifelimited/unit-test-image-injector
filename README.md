@@ -25,7 +25,7 @@ This tool automates the process of inserting device photos into Unit Test Word d
 
 ### Option 1: Run with Python / GPU (Recommended for v1.3.2+)
 
-For a massive EXE file download https://drive.google.com/file/d/1DP1b5245Kz_tljlczBh7rCKrCpvGjelG/view?usp=sharing
+
  
 Since recent versions introduce a powerful AI OCR rotation feature (`easyocr` with PyTorch), compiling it to a standalone `.exe` would create a massive 3GB+ file. We strongly recommend running the app natively through Python using our setup scripts.
 
@@ -36,6 +36,9 @@ Since recent versions introduce a powerful AI OCR rotation feature (`easyocr` wi
 **For macOS:**
 1. Double-click `setup_mac.command` to install dependencies and create a local virtual environment. (You only need to do this once).
 2. Double-click `run_mac.command` to launch the app!
+
+For a massive EXE file download https://drive.google.com/file/d/1DP1b5245Kz_tljlczBh7rCKrCpvGjelG/view?usp=sharing
+
 
 ### Option 2: Run the .exe (Legacy / EXIF-only)
 
