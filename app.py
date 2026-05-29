@@ -8,6 +8,7 @@ Supports: .jpg .jpeg .png .bmp .tiff .heic .heif
 Auto-converts HEIC/HEIF (iPhone photos) to JPG.
 
 Changelog:
+  v1.2.1 — Auto-Rotate images (EXIF based)
   v1.2.0 — Dynamic interactive table cell selection
   v1.1.1 — Bug fixes and optimizations
   v1.1.0 — Customizable folder keyword, Stop button, version display
@@ -16,7 +17,7 @@ Changelog:
 Usage: python app.py
 """
 
-__version__ = "1.2.0"
+__version__ = "1.2.1"
 __app_name__ = "Unit Test Image Injector"
 
 import sys
@@ -49,8 +50,9 @@ atexit.register(cleanup_temp_files)
 
 
 def convert_heic_to_jpg(heic_path: str) -> str:
-    from PIL import Image as PILImage
+    from PIL import Image as PILImage, ImageOps
     img = PILImage.open(heic_path)
+    img = ImageOps.exif_transpose(img) or img
     fd, tmp_path = tempfile.mkstemp(suffix='.jpg', prefix='heic_conv_')
     os.close(fd)
     img.convert('RGB').save(tmp_path, 'JPEG', quality=90)
@@ -92,6 +94,7 @@ def find_sn_folders(root: str, keyword: str = "WZP") -> dict:
 def run_injection(docx_path: str, sn_root: str, output_path: str,
                   keyword: str = "WZP",
                   sn_row_col: tuple = (5, 3), img_row_col: tuple = (12, 0),
+                  auto_rotate: bool = True,
                   log_callback=None, progress_callback=None,
                   cancel_event=None):
     """
@@ -214,6 +217,20 @@ def run_injection(docx_path: str, sn_root: str, output_path: str,
                     orig = os.path.basename(img_path)
                     img_path = convert_heic_to_jpg(img_path)
                     log(f"      Converted {orig} -> JPG")
+                elif auto_rotate:
+                    from PIL import Image as PILImage, ImageOps
+                    try:
+                        with PILImage.open(img_path) as img:
+                            img_rotated = ImageOps.exif_transpose(img)
+                            if img_rotated is not None and img_rotated != img:
+                                fd, tmp_path = tempfile.mkstemp(suffix='.jpg', prefix='rot_')
+                                os.close(fd)
+                                img_rotated.convert('RGB').save(tmp_path, 'JPEG', quality=90)
+                                _temp_files.append(tmp_path)
+                                log(f"      Auto-rotated {os.path.basename(img_path)}")
+                                img_path = tmp_path
+                    except Exception as e:
+                        pass
 
                 width = Cm(14.0)
                 if img_idx == 0:
@@ -425,6 +442,7 @@ class App(tk.Tk):
         self._cancel_event = threading.Event()
         self.sn_row_col = (5, 3)
         self.img_row_col = (12, 0)
+        self.auto_rotate_var = tk.BooleanVar(value=True)
         self._build_ui()
 
     def _build_ui(self):
@@ -487,6 +505,12 @@ class App(tk.Tk):
             state="disabled"
         )
         self.stop_btn.pack(side="left", padx=(10, 0))
+
+        tk.Checkbutton(
+            btn_frame, text="Auto-Rotate Images (EXIF)", variable=self.auto_rotate_var,
+            bg=C["bg"], fg=C["text"], selectcolor=C["card"], activebackground=C["bg"],
+            activeforeground=C["text"], font=("Segoe UI", 9)
+        ).pack(side="left", padx=15)
 
         self.status_label = ttk.Label(btn_frame, text="Ready", style="Status.TLabel")
         self.status_label.pack(side="left", padx=15)
@@ -756,6 +780,7 @@ class App(tk.Tk):
                     docx, sn_root, output,
                     keyword=keyword,
                     sn_row_col=self.sn_row_col, img_row_col=self.img_row_col,
+                    auto_rotate=self.auto_rotate_var.get(),
                     log_callback=self._log,
                     progress_callback=self._update_progress,
                     cancel_event=self._cancel_event

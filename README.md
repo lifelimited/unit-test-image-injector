@@ -5,7 +5,7 @@
 ![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.2.0-orange)
+![Version](https://img.shields.io/badge/Version-1.2.1-orange)
 
 ## Overview
 
@@ -140,6 +140,9 @@ The `.exe` will be created at `dist/Unit_Test_Image_Injector.exe`
 - No additional dependencies
 
 ## Changelog
+
+### v1.2.1
+- 📸 **EXIF Auto-Rotate** — Automatically normalizes image orientations using EXIF data so they are upright in the document.
 
 ### v1.2.0
 - ✨ **Dynamic Table Layout** — Automatically reads the Word document so you can visually select where the S/N and Image cells are. No hardcoded formats!
