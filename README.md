@@ -75,11 +75,13 @@ Photo_Root/
 
 | Field | Description |
 |-------|-------------|
-| **📄 Word Document** | Select your Unit Test `.docx` template. **A pop-up will appear** letting you visually select the S/N cell and Image cell. |
-| **⚙ Configure Layout** | Click this to re-open the table grid layout and change your selected cell mappings. |
+| **📝 Word Document** | Select your Unit Test `.docx` template. **A pop-up will appear** letting you visually select the S/N cell and Image cell. |
+| **⚙️ Configure Layout** | Click this to re-open the table grid layout and change your selected cell mappings. |
 | **📁 SN Folders Directory** | Select the parent folder containing all `WZP*` subfolders |
 | **Keyword** | Folder prefix to match (default: `WZP`, change as needed) |
 | **💾 Output File** | Where to save the result (default: `unit_test_with_images.docx`) |
+| **Auto-Rotate (EXIF)** | Check to use the basic camera orientation data. |
+| **Smart Rotate (EasyOCR GPU)** | **Highly recommended.** Check this to use your GPU to scan the photo for text and forcefully rotate it so it is readable from left-to-right. Required if you take sideways photos of wide devices (like IP Phones). |
 
 ### Step 4: Run
 
@@ -146,7 +148,19 @@ The `.exe` will be created at `dist/Unit_Test_Image_Injector.exe`
 - Windows 10/11
 - No additional dependencies
 
+## Bug Reports Resolved (v1.3.1)
+
+If you were experiencing bugs in earlier v1.3.0/v1.2.x releases, these have now been officially resolved:
+- **"The picture can't be displayed" in Word**: We identified that rotating an image stripped its Dots-Per-Inch (DPI) metadata. MS Word assumes an image with no DPI is infinitely large and crashes its image viewer. The script now aggressively forces `dpi=(72, 72)` upon injection.
+- **HEIC Photos injecting sideways despite Auto-Rotate**: Converting `.heic` photos internally stripped the EXIF rotation tag before the AI or EXIF rotators could see it. We now enforce `exif_transpose` on HEIC files before saving the temporary conversion.
+- **EasyOCR Silently Failing**: Previously, `easyocr` wasn't bundled. We have updated `run.bat` to perform an initial `pip install` download of the 3GB Machine Learning libraries so the GPU rotation functions correctly natively.
+
 ## Changelog
+
+### v1.3.1 (Current)
+- 🐛 **MS Word DPI Corruption Fix** — Fixed the infamous "picture can't be displayed" Red X bug.
+- 🐛 **HEIC EXIF Bug Fix** — Fixed bug where HEIC conversion accidentally stripped EXIF rotation data.
+- ⚡ **Auto-Installer & Defaults** — `run.bat` now automatically installs `easyocr`, `torch`, and `pillow-heif` dependencies on first launch. "Smart Rotate" is enabled by default.
 
 ### v1.3.0 (Beta)
 - 🧠 **Smart Auto-Rotate (EasyOCR)** — Uses PyTorch and your GPU to detect the exact orientation of text on screens and forcefully rotates the image 90°, 180°, or 270° until perfectly readable.
