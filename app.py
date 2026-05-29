@@ -68,11 +68,19 @@ def get_best_orientation(img_path: str, log_cb=None) -> int:
 
     with PILImage.open(img_path) as img:
         img = img.convert('RGB')
+        
+        # Optimization: scale down large images for OCR
+        max_size = 1200
+        if max(img.width, img.height) > max_size:
+            ratio = max_size / max(img.width, img.height)
+            new_size = (int(img.width * ratio), int(img.height * ratio))
+            img = img.resize(new_size, PILImage.Resampling.LANCZOS)
+            
         best_angle = 0
         best_score = -1
 
         for angle in [0, 90, 180, 270]:
-            rotated = img.rotate(angle, expand=True)
+            rotated = img if angle == 0 else img.rotate(angle, expand=True)
             img_np = np.array(rotated)
             
             # detail=1 returns bounding box, text, and confidence level
@@ -84,6 +92,11 @@ def get_best_orientation(img_path: str, log_cb=None) -> int:
             if score > best_score:
                 best_score = score
                 best_angle = angle
+                
+        # If score is very low, it's just guessing on noise. Trust EXIF instead.
+        if best_score < 50:
+            if log_cb: log_cb(f"      [OCR] Score too low ({best_score:.1f} < 50), trusting EXIF.")
+            return 0
 
         return best_angle
 
