@@ -8,13 +8,15 @@ Supports: .jpg .jpeg .png .bmp .tiff .heic .heif
 Auto-converts HEIC/HEIF (iPhone photos) to JPG.
 
 Changelog:
+  v1.2.0 — Dynamic interactive table cell selection
+  v1.1.1 — Bug fixes and optimizations
   v1.1.0 — Customizable folder keyword, Stop button, version display
   v1.0.0 — Initial release
 
 Usage: python app.py
 """
 
-__version__ = "1.1.1"
+__version__ = "1.2.0"
 __app_name__ = "Unit Test Image Injector"
 
 import sys
@@ -89,6 +91,7 @@ def find_sn_folders(root: str, keyword: str = "WZP") -> dict:
 
 def run_injection(docx_path: str, sn_root: str, output_path: str,
                   keyword: str = "WZP",
+                  sn_row_col: tuple = (5, 3), img_row_col: tuple = (12, 0),
                   log_callback=None, progress_callback=None,
                   cancel_event=None):
     """
@@ -146,7 +149,7 @@ def run_injection(docx_path: str, sn_root: str, output_path: str,
     sn_to_table = {}
     for t_idx, table in enumerate(doc.tables):
         try:
-            sn_cell = table.rows[5].cells[3]
+            sn_cell = table.rows[sn_row_col[0]].cells[sn_row_col[1]]
             sn = sn_cell.text.strip()
             if sn and sn.upper().startswith(keyword_upper):
                 sn_to_table[sn] = t_idx
@@ -187,10 +190,10 @@ def run_injection(docx_path: str, sn_root: str, output_path: str,
 
         table = doc.tables[t_idx]
         try:
-            img_cell = table.rows[12].cells[0]
+            img_cell = table.rows[img_row_col[0]].cells[img_row_col[1]]
         except IndexError:
-            log(f"  [ERR ] {sn}: table {t_idx} has no row 12")
-            errors.append(f"{sn}: no row 12")
+            log(f"  [ERR ] {sn}: table {t_idx} has no row {img_row_col[0]}")
+            errors.append(f"{sn}: no row {img_row_col[0]}")
             continue
 
         # Clear cell
@@ -260,6 +263,106 @@ def run_injection(docx_path: str, sn_root: str, output_path: str,
     return injected, img_count, no_folder, errors
 
 
+class TableSelectionDialog(tk.Toplevel):
+    def __init__(self, parent, docx_path, current_sn_rc, current_img_rc):
+        super().__init__(parent)
+        self.title("Configure Table Layout")
+        self.geometry("900x600")
+        self.configure(bg="#1a1a2e")
+        self.transient(parent)
+        self.grab_set()
+
+        self.result = None
+        self.sn_rc = current_sn_rc
+        self.img_rc = current_img_rc
+        self.mode = tk.StringVar(value="sn")
+        self.COLORS = parent.COLORS
+
+        # Header
+        header = tk.Frame(self, bg=self.COLORS["bg"])
+        header.pack(fill="x", padx=10, pady=10)
+        
+        tk.Label(header, text="Select Cell Locations", bg=self.COLORS["bg"], fg=self.COLORS["text"], font=("Segoe UI", 14, "bold")).pack(side="left")
+        
+        instructions = tk.Label(header, text="1. Select 'S/N' mode and click the Serial Number cell.\n2. Select 'Image' mode and click the Empty Image cell.\n3. Click Approve.", bg=self.COLORS["bg"], fg=self.COLORS["text_dim"], font=("Segoe UI", 10), justify="left")
+        instructions.pack(side="left", padx=20)
+
+        # Controls
+        controls = tk.Frame(self, bg=self.COLORS["card"])
+        controls.pack(fill="x", padx=10, pady=5)
+        
+        tk.Radiobutton(controls, text="Select S/N Cell (Blue)", variable=self.mode, value="sn", bg=self.COLORS["card"], fg="#00a8ff", selectcolor=self.COLORS["bg"], font=("Segoe UI", 10, "bold")).pack(side="left", padx=10, pady=5)
+        tk.Radiobutton(controls, text="Select Image Cell (Green)", variable=self.mode, value="img", bg=self.COLORS["card"], fg="#00b894", selectcolor=self.COLORS["bg"], font=("Segoe UI", 10, "bold")).pack(side="left", padx=10, pady=5)
+        
+        tk.Button(controls, text="Approve", bg=self.COLORS["btn_run"], fg=self.COLORS["btn_run_fg"], font=("Segoe UI", 10, "bold"), command=self._approve).pack(side="right", padx=10, pady=5)
+        tk.Button(controls, text="Cancel", bg=self.COLORS["btn_stop"], fg=self.COLORS["btn_stop_fg"], font=("Segoe UI", 10, "bold"), command=self.destroy).pack(side="right")
+
+        # Table Grid
+        container = tk.Frame(self, bg=self.COLORS["bg"])
+        container.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        canvas = tk.Canvas(container, bg=self.COLORS["input_bg"], highlightthickness=0)
+        vsb = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
+        hsb = ttk.Scrollbar(container, orient="horizontal", command=canvas.xview)
+        self.grid_frame = tk.Frame(canvas, bg=self.COLORS["input_bg"])
+        
+        self.grid_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=self.grid_frame, anchor="nw")
+        canvas.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+        
+        canvas.pack(side="left", fill="both", expand=True)
+        vsb.pack(side="right", fill="y")
+        hsb.pack(side="bottom", fill="x")
+
+        self.buttons = {}
+        self._load_table(docx_path)
+
+    def _load_table(self, docx_path):
+        from docx import Document
+        try:
+            doc = Document(docx_path)
+            if not doc.tables:
+                tk.Label(self.grid_frame, text="No tables found in the document.", fg=self.COLORS["accent"], bg=self.COLORS["input_bg"]).pack()
+                return
+            
+            table = doc.tables[0]
+            for r_idx, row in enumerate(table.rows):
+                for c_idx, cell in enumerate(row.cells):
+                    text = cell.text.strip()[:30]
+                    if not text: text = "(Empty)"
+                    
+                    btn = tk.Button(self.grid_frame, text=text, width=15, height=2,
+                                    bg=self.COLORS["card"], fg=self.COLORS["text"],
+                                    activebackground=self.COLORS["card_alt"],
+                                    command=lambda r=r_idx, c=c_idx: self._on_cell_click(r, c))
+                    btn.grid(row=r_idx, column=c_idx, padx=1, pady=1, sticky="nsew")
+                    self.buttons[(r_idx, c_idx)] = btn
+            
+            self._update_colors()
+        except Exception as e:
+            tk.Label(self.grid_frame, text=f"Error loading table:\n{e}", fg=self.COLORS["accent"], bg=self.COLORS["input_bg"]).pack()
+
+    def _on_cell_click(self, r, c):
+        if self.mode.get() == "sn":
+            self.sn_rc = (r, c)
+        else:
+            self.img_rc = (r, c)
+        self._update_colors()
+
+    def _update_colors(self):
+        for (r, c), btn in self.buttons.items():
+            if (r, c) == self.sn_rc:
+                btn.configure(bg="#00a8ff", fg="white")
+            elif (r, c) == self.img_rc:
+                btn.configure(bg="#00b894", fg="white")
+            else:
+                btn.configure(bg=self.COLORS["card"], fg=self.COLORS["text"])
+
+    def _approve(self):
+        self.result = (self.sn_rc, self.img_rc)
+        self.destroy()
+
+
 # ─────────────────────────────────────────────
 # GUI Application
 # ─────────────────────────────────────────────
@@ -320,6 +423,8 @@ class App(tk.Tk):
 
         self._running = False
         self._cancel_event = threading.Event()
+        self.sn_row_col = (5, 3)
+        self.img_row_col = (12, 0)
         self._build_ui()
 
     def _build_ui(self):
@@ -344,7 +449,7 @@ class App(tk.Tk):
         # Card 1: DOCX file
         self.docx_var = tk.StringVar()
         self._make_file_card(inputs_frame, "Word Document (.docx)",
-                             self.docx_var, self._pick_docx, icon="📄")
+                             self.docx_var, self._pick_docx, icon="📄", with_config=True)
 
         # Card 2: SN folder root + keyword
         self.sn_root_var = tk.StringVar()
@@ -419,7 +524,7 @@ class App(tk.Tk):
 
         self._auto_detect_paths()
 
-    def _make_file_card(self, parent, label_text, var, command, icon="📄"):
+    def _make_file_card(self, parent, label_text, var, command, icon="📄", with_config=False):
         C = self.COLORS
         card = tk.Frame(parent, bg=C["card"], bd=0, highlightthickness=1,
                         highlightbackground=C["border"])
@@ -442,11 +547,26 @@ class App(tk.Tk):
                         padx=12, pady=2,
                         command=command)
         btn.pack(side="right")
+        
+        if with_config:
+            self.config_btn = tk.Button(top, text="⚙ Configure Layout",
+                                        font=("Segoe UI", 9),
+                                        bg=C["border"], fg=C["text"],
+                                        activebackground=C["card_alt"],
+                                        relief="flat", cursor="hand2",
+                                        padx=12, pady=2,
+                                        command=self._configure_layout)
+            self.config_btn.pack(side="right", padx=(0, 10))
 
         path_label = tk.Label(inner, textvariable=var,
                               bg=C["card"], fg=C["text_dim"],
                               font=("Consolas", 9), anchor="w")
         path_label.pack(fill="x", pady=(4, 0))
+        
+        if with_config:
+            self.layout_label = tk.Label(inner, text=f"Layout: S/N at R{self.sn_row_col[0]+1}C{self.sn_row_col[1]+1} | Image at R{self.img_row_col[0]+1}C{self.img_row_col[1]+1}",
+                                         bg=C["card"], fg=C["accent_ok"], font=("Segoe UI", 9, "italic"), anchor="w")
+            self.layout_label.pack(fill="x", pady=(2, 0))
 
     def _make_sn_card(self, parent):
         """Build the SN Folders card with an editable keyword field."""
@@ -515,6 +635,21 @@ class App(tk.Tk):
         )
         if path:
             self.docx_var.set(path)
+            self._configure_layout()
+
+    def _configure_layout(self):
+        docx = self.docx_var.get().strip()
+        if not docx or not os.path.isfile(docx):
+            messagebox.showerror("Error", "Please select a valid Word document (.docx) first.")
+            return
+            
+        dialog = TableSelectionDialog(self, docx, self.sn_row_col, self.img_row_col)
+        self.wait_window(dialog)
+        
+        if dialog.result:
+            self.sn_row_col, self.img_row_col = dialog.result
+            self.layout_label.configure(text=f"Layout: S/N at R{self.sn_row_col[0]+1}C{self.sn_row_col[1]+1} | Image at R{self.img_row_col[0]+1}C{self.img_row_col[1]+1}")
+            self._log(f"Table layout configured: S/N={self.sn_row_col}, Image={self.img_row_col}")
 
     def _pick_sn_root(self):
         path = filedialog.askdirectory(
@@ -620,6 +755,7 @@ class App(tk.Tk):
                 injected, img_count, no_folder, errors = run_injection(
                     docx, sn_root, output,
                     keyword=keyword,
+                    sn_row_col=self.sn_row_col, img_row_col=self.img_row_col,
                     log_callback=self._log,
                     progress_callback=self._update_progress,
                     cancel_event=self._cancel_event

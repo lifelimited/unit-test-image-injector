@@ -5,7 +5,7 @@
 ![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.1.1-orange)
+![Version](https://img.shields.io/badge/Version-1.2.0-orange)
 
 ## Overview
 
@@ -13,6 +13,7 @@ This tool automates the process of inserting device photos into Unit Test Word d
 
 ### Key Features
 
+- **Dynamic Table Layout** — Automatically read the Word document so you can visually select where the S/N and Image cells are. No hardcoded formats!
 - **Auto-match by Serial Number** — Folders named by S/N (e.g., `WZP301w123/`) are matched to the corresponding table in the Word document
 - **HEIC Support** — iPhone `.heic` photos are automatically converted to JPG
 - **Customizable Keyword** — Change the folder prefix from `WZP` to any keyword to match your project
@@ -67,7 +68,8 @@ Photo_Root/
 
 | Field | Description |
 |-------|-------------|
-| **📄 Word Document** | Select your Unit Test `.docx` template |
+| **📄 Word Document** | Select your Unit Test `.docx` template. **A pop-up will appear** letting you visually select the S/N cell and Image cell. |
+| **⚙ Configure Layout** | Click this to re-open the table grid layout and change your selected cell mappings. |
 | **📁 SN Folders Directory** | Select the parent folder containing all `WZP*` subfolders |
 | **Keyword** | Folder prefix to match (default: `WZP`, change as needed) |
 | **💾 Output File** | Where to save the result (default: `unit_test_with_images.docx`) |
@@ -87,15 +89,7 @@ Click **■ Stop** at any time to cancel. Any images already inserted will be sa
 
 ## Document Structure
 
-The app expects a Word document with **one table per device**, where:
-
-| Cell Location | Content |
-|---------------|---------|
-| `Row 5, Column D` | Serial Number (e.g., `WZP30149NFC`) |
-| `Row 12, Column A` | Empty cell — **images are inserted here** |
-
-> [!NOTE]
-> This layout matches the standard Cisco IP Phone Unit Test form used in Thai airport infrastructure projects.
+The app natively parses the first table in your Word document and displays it in a grid. You simply click on the cell containing your Serial Number, and the cell you want images inserted into! No more hardcoded layouts.
 
 ## Supported Image Formats
 
@@ -135,6 +129,10 @@ The `.exe` will be created at `dist/Unit_Test_Image_Injector.exe`
 - No additional dependencies
 
 ## Changelog
+
+### v1.2.0
+- ✨ **Dynamic Table Layout** — Automatically reads the Word document so you can visually select where the S/N and Image cells are. No hardcoded formats!
+- ♻️ **Major UI Overhaul** — Added pop-up grid preview for selecting exact cell coordinates.
 
 ### v1.1.1
 - 🐛 **Fixed empty keyword guard** — Empty keyword no longer matches all folders
