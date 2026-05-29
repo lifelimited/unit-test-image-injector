@@ -313,7 +313,8 @@ def run_injection(docx_path: str, sn_root: str, output_path: str,
                     orig = os.path.basename(img_path)
                     img_path = convert_heic_to_jpg(img_path)
                     log(f"      Converted {orig} -> JPG")
-                elif auto_rotate or smart_rotate:
+                
+                if auto_rotate or smart_rotate:
                     from PIL import Image as PILImage, ImageOps
                     try:
                         with PILImage.open(img_path) as img:
