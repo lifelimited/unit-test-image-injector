@@ -62,7 +62,7 @@ Photo_Root/
 
 ### Step 2: Launch the App
 
-![App Screenshot]([docs/app_screenshot.png](https://img1.pic.in.th/images/Screenshot-2026-05-29-195205.md.png)
+![App Screenshot](https://img1.pic.in.th/images/Screenshot-2026-05-29-195205.md.png)
 
 ### Step 3: Configure
 
