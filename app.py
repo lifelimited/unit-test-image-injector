@@ -108,11 +108,30 @@ atexit.register(cleanup_temp_files)
 
 
 def convert_heic_to_jpg(heic_path: str) -> str:
-    from PIL import Image as PILImage, ImageOps
+    """Converts a HEIC/HEIF image to a temporary JPEG and returns the new path."""
+    try:
+        from PIL import Image as PILImage, ImageOps
+        import pillow_heif
+        pillow_heif.register_heif_opener()
+    except ImportError:
+        pass
+    
     img = PILImage.open(heic_path)
-    img = ImageOps.exif_transpose(img) or img
-    fd, tmp_path = tempfile.mkstemp(suffix='.jpg', prefix='heic_conv_')
+    
+    # HEIC images have EXIF rotation metadata. If we just save as JPEG, Pillow strips the EXIF!
+    # So we MUST forcefully apply the EXIF rotation here before converting.
+    try:
+        from PIL import ImageOps
+        img_rotated = ImageOps.exif_transpose(img)
+        if img_rotated is not None:
+            img = img_rotated
+    except Exception:
+        pass
+    
+    # Save to temp
+    fd, tmp_path = tempfile.mkstemp(suffix='.jpg', prefix='heic_')
     os.close(fd)
+    
     img.convert('RGB').save(tmp_path, 'JPEG', quality=90, dpi=(72, 72))
     _temp_files.append(tmp_path)
     return tmp_path
