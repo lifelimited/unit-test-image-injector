@@ -79,8 +79,6 @@ def get_best_orientation(img_path: str, log_cb=None) -> int:
         best_angle = 0
         best_score = -1
 
-        important_words = ['cisco', 'phone', 'model', 'cp-', 'ipv4', 'mac', 'address', 'serial', 'fvh', 'information', 'advanced', 'technology']
-
         for angle in [0, 90, 180, 270]:
             rotated = img if angle == 0 else img.rotate(angle, expand=True)
             img_np = np.array(rotated)
@@ -88,25 +86,24 @@ def get_best_orientation(img_path: str, log_cb=None) -> int:
             # detail=1 returns bounding box, text, and confidence level
             results = _easyocr_reader.readtext(img_np)
             
+            # Score based purely on the volume of readable text (length >= 4, high confidence)
             score = 0
             for _, text, prob in results:
                 text = text.strip()
                 if prob > 0.4 and len(text) >= 4:
-                    word_score = (prob * prob) * len(text)
-                    if any(w in text.lower() for w in important_words):
-                        word_score *= 20
-                    score += word_score
+                    score += len(text)
             
             if score > best_score:
                 best_score = score
                 best_angle = angle
                 
-        # If score is very low, it's just guessing on noise. Trust EXIF instead.
-        if best_score < 50:
-            if log_cb: log_cb(f"      [OCR] Score too low ({best_score:.1f} < 50), trusting EXIF.")
+        # If score is too low (< 15 characters total), it's probably noise. Trust EXIF.
+        if best_score < 15:
+            if log_cb: log_cb(f"      [OCR] Score too low ({best_score} < 15), trusting EXIF.")
             return 0
 
         return best_angle
+
 
 
 
