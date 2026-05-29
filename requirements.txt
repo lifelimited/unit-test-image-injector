@@ -1,0 +1,6 @@
+easyocr
+numpy
+Pillow
+pillow-heif
+python-docx
+openpyxl

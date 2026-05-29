@@ -1,14 +1,13 @@
 #!/bin/bash
-# Move to the folder where the script is located
 cd "$(dirname "$0")"
 
-echo "==========================================="
-echo "  Unit Test Image Injector (macOS / Linux) "
-echo "==========================================="
-echo ""
-echo "Installing lightweight dependencies (No AI/GPU)..."
-pip3 install python-docx Pillow pillow-heif openpyxl
+if [ ! -f "venv/bin/activate" ]; then
+    echo "[Error] Virtual environment not found."
+    echo "Please double-click setup_mac.command first to install the dependencies!"
+    echo ""
+    read -p "Press Enter to close..."
+    exit 1
+fi
 
-echo ""
-echo "Starting Application..."
+source venv/bin/activate
 python3 app.py
