@@ -1,4 +1,4 @@
-# Unit Test Image Injector
+# ATP Image Injector
 
 > Automatically insert device photos into Unit Test Word documents by matching Serial Number folders.
 
