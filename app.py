@@ -70,7 +70,7 @@ def get_best_orientation(img_path: str, log_cb=None) -> int:
         img = img.convert('RGB')
         
         # Optimization: scale down large images for OCR
-        max_size = 1200
+        max_size = 1600
         if max(img.width, img.height) > max_size:
             ratio = max_size / max(img.width, img.height)
             new_size = (int(img.width * ratio), int(img.height * ratio))
@@ -79,6 +79,8 @@ def get_best_orientation(img_path: str, log_cb=None) -> int:
         best_angle = 0
         best_score = -1
 
+        important_words = ['cisco', 'phone', 'model', 'cp-', 'ipv4', 'mac', 'address', 'serial', 'fvh', 'information', 'advanced', 'technology']
+
         for angle in [0, 90, 180, 270]:
             rotated = img if angle == 0 else img.rotate(angle, expand=True)
             img_np = np.array(rotated)
@@ -86,8 +88,14 @@ def get_best_orientation(img_path: str, log_cb=None) -> int:
             # detail=1 returns bounding box, text, and confidence level
             results = _easyocr_reader.readtext(img_np)
             
-            # Score heavily based on long, high-confidence words
-            score = sum((prob * prob) * len(text) for _, text, prob in results if prob > 0.3)
+            score = 0
+            for _, text, prob in results:
+                text = text.strip()
+                if prob > 0.4 and len(text) >= 4:
+                    word_score = (prob * prob) * len(text)
+                    if any(w in text.lower() for w in important_words):
+                        word_score *= 20
+                    score += word_score
             
             if score > best_score:
                 best_score = score
@@ -99,6 +107,7 @@ def get_best_orientation(img_path: str, log_cb=None) -> int:
             return 0
 
         return best_angle
+
 
 
 def setup_temp_dir():
