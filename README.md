@@ -148,13 +148,13 @@ The `.exe` will be created at `dist/Unit_Test_Image_Injector.exe`
 
 ## Changelog
 
-### v1.3.0
+### v1.3.0 (Beta)
 - 🧠 **Smart Auto-Rotate (EasyOCR)** — Uses PyTorch and your GPU to detect the exact orientation of text on screens and forcefully rotates the image 90°, 180°, or 270° until perfectly readable.
 
-### v1.2.1
+### v1.2.1 (Beta)
 - 📸 **EXIF Auto-Rotate** — Automatically normalizes image orientations using EXIF data so they are upright in the document.
 
-### v1.2.0
+### v1.2.0 (Stable)
 - ✨ **Dynamic Table Layout** — Automatically reads the Word document so you can visually select where the S/N and Image cells are. No hardcoded formats!
 - ♻️ **Major UI Overhaul** — Added pop-up grid preview for selecting exact cell coordinates.
 
