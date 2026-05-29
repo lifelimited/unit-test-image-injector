@@ -5,7 +5,7 @@
 ![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/Version-1.1.0-orange)
+![Version](https://img.shields.io/badge/Version-1.1.1-orange)
 
 ## Overview
 
@@ -135,6 +135,12 @@ The `.exe` will be created at `dist/Unit_Test_Image_Injector.exe`
 - No additional dependencies
 
 ## Changelog
+
+### v1.1.1
+- 🐛 **Fixed empty keyword guard** — Empty keyword no longer matches all folders
+- 🐛 **Removed hardcoded auto-detect paths** — User always browses for files (portable)
+- 🐛 **Log output optimized** — Large folder sets (600+) show summary instead of flooding log
+- ✅ **Multi-keyword support verified** — Works with `WZP`, `FVH`, or any custom prefix
 
 ### v1.1.0
 - ✅ **Customizable keyword** — Change folder prefix from `WZP` to any string

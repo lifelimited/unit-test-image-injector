@@ -14,7 +14,7 @@ Changelog:
 Usage: python app.py
 """
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 __app_name__ = "Unit Test Image Injector"
 
 import sys
@@ -65,6 +65,8 @@ def find_sn_folders(root: str, keyword: str = "WZP") -> dict:
     if not os.path.isdir(root):
         return sn_map
     keyword_upper = keyword.strip().upper()
+    if not keyword_upper:
+        return sn_map  # Empty keyword would match everything — reject
     for entry in os.listdir(root):
         if not entry.upper().startswith(keyword_upper):
             continue
@@ -114,9 +116,21 @@ def run_injection(docx_path: str, sn_root: str, output_path: str,
         log(f"ERROR: No '{keyword}*' folders found in the selected directory.")
         return 0, 0, 0, [f"No {keyword}* folders found"]
 
-    for sn, imgs in sorted(sn_folders.items()):
-        heic_count = sum(1 for i in imgs if os.path.splitext(i)[1].lower() in ('.heic', '.heif'))
-        log(f"    {sn}: {len(imgs)} file(s)" + (f" ({heic_count} HEIC)" if heic_count else ""))
+    # Show summary (avoid flooding log with 600+ lines)
+    sn_sorted = sorted(sn_folders.keys())
+    if len(sn_sorted) <= 10:
+        for sn in sn_sorted:
+            imgs = sn_folders[sn]
+            heic_count = sum(1 for i in imgs if os.path.splitext(i)[1].lower() in ('.heic', '.heif'))
+            log(f"    {sn}: {len(imgs)} file(s)" + (f" ({heic_count} HEIC)" if heic_count else ""))
+    else:
+        for sn in sn_sorted[:3]:
+            imgs = sn_folders[sn]
+            log(f"    {sn}: {len(imgs)} file(s)")
+        log(f"    ... ({len(sn_sorted) - 6} more) ...")
+        for sn in sn_sorted[-3:]:
+            imgs = sn_folders[sn]
+            log(f"    {sn}: {len(imgs)} file(s)")
 
     if is_cancelled():
         log("\n[CANCELLED] Stopped by user.")
@@ -491,15 +505,8 @@ class App(tk.Tk):
         path_label.pack(fill="x", pady=(4, 0))
 
     def _auto_detect_paths(self):
-        base = r'C:\Users\KIE\Desktop\ocr'
-        docx_files = [d for d in glob.glob(os.path.join(base, '*.docx'))
-                      if 'unit_test_with_images' not in d
-                      and 'HQ_unit_test' not in d]
-        if docx_files:
-            self.docx_var.set(docx_files[0])
-        if os.path.isdir(base):
-            self.sn_root_var.set(base)
-        self.output_var.set(os.path.join(base, 'unit_test_with_images.docx'))
+        """Leave paths empty — user always selects via Browse."""
+        pass
 
     def _pick_docx(self):
         path = filedialog.askopenfilename(
