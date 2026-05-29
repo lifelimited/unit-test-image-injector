@@ -523,7 +523,7 @@ class App(tk.Tk):
         self.sn_row_col = (5, 3)
         self.img_row_col = (12, 0)
         self.auto_rotate_var = tk.BooleanVar(value=True)
-        self.smart_rotate_var = tk.BooleanVar(value=False)
+        self.smart_rotate_var = tk.BooleanVar(value=True)
         self._build_ui()
 
     def _build_ui(self):
