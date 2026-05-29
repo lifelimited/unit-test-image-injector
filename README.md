@@ -24,7 +24,7 @@ This tool automates the process of inserting device photos into Unit Test Word d
 ## Quick Start
 
 ### Option 1: Run with Python / GPU (Recommended for v1.3.0)
-
+ For the EXE file [Link] (https://drive.google.com/file/d/1DP1b5245Kz_tljlczBh7rCKrCpvGjelG/view?usp=sharing)
 Since v1.3.0 introduces a powerful AI OCR rotation feature (`easyocr` with PyTorch), compiling it to a standalone `.exe` would create a massive 3.5GB file. We strongly recommend running the app natively through Python to leverage your system's GPU.
 
 1. Double-click `run.bat` (or run `python app.py` from your terminal).
