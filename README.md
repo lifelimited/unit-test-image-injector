@@ -87,9 +87,20 @@ Click **▶ Run Injection** and watch the progress:
 
 Click **■ Stop** at any time to cancel. Any images already inserted will be saved to the output file.
 
-## Document Structure
+## How to Configure Table Layout
 
-The app natively parses the first table in your Word document and displays it in a grid. You simply click on the cell containing your Serial Number, and the cell you want images inserted into! No more hardcoded layouts.
+The app natively parses the first table in your Word document and displays it in a grid. This allows you to visually map exactly where the Serial Number and Image insertion cells are. No more hardcoded layouts!
+
+![Configure Layout Screenshot](docs/configure_layout.png)
+
+### Step-by-Step Guide:
+1. **Select Document:** Click "Browse" next to **Word Document (.docx)**. Once you pick your template, the "Configure Table Layout" pop-up will appear automatically.
+2. **Select S/N Cell:** Make sure the **Select S/N Cell (Blue)** option is checked. Click the cell in the grid that contains your Serial Number format (e.g., `WZP301...`). The cell will highlight in **Blue**.
+3. **Select Image Cell:** Switch to the **Select Image Cell (Green)** option. Click the empty cell where you want the photos to be injected. The cell will highlight in **Green**.
+4. **Approve:** Click the **Approve** button.
+5. **Verify:** Back on the main screen, you will see a layout summary (e.g., `Layout: S/N at R6C4 | Image at R13C1`) confirming your configuration.
+
+> **Tip:** If you ever need to change the mapping, you can click the **⚙ Configure Layout** button on the main app screen to reopen the visual grid.
 
 ## Supported Image Formats
 
