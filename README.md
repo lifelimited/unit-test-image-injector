@@ -13,7 +13,7 @@ This tool automates the process of inserting device photos into Unit Test Word d
 
 ### Key Features
 
-- **Auto-match by Serial Number** — Folders named by S/N (e.g., `WZP30149NFC/`) are matched to the corresponding table in the Word document
+- **Auto-match by Serial Number** — Folders named by S/N (e.g., `WZP301w123/`) are matched to the corresponding table in the Word document
 - **HEIC Support** — iPhone `.heic` photos are automatically converted to JPG
 - **Customizable Keyword** — Change the folder prefix from `WZP` to any keyword to match your project
 - **Stop Button** — Cancel processing at any time; partial progress is saved
