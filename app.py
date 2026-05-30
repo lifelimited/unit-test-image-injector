@@ -735,7 +735,7 @@ class App(tk.Tk):
         top = tk.Frame(inner, bg=C["card"])
         top.pack(fill="x")
 
-        tk.Label(top, text="📁  SN Folders Directory",
+        tk.Label(top, text="📁  Photos Folders Directory(SN. or etc.)",
                  bg=C["card"], fg=C["text"],
                  font=("Segoe UI", 10, "bold")).pack(side="left")
 
