@@ -41,10 +41,10 @@ _temp_files = []
 # Configuration
 # ─────────────────────────────────────────────
 # Find the ORIGINAL docx (not the output)
-_all_docx = glob.glob(r'C:\Users\KIE\Desktop\ocr\*.docx')
+_all_docx = glob.glob(r'')
 DOCX_PATH = [d for d in _all_docx if 'unit_test_with_images' not in d][0]
-SN_FOLDERS_ROOT  = r'C:\Users\KIE\Desktop\ocr'           # Parent folder containing WZP* subfolders
-OUTPUT_DOCX      = r'C:\Users\KIE\Desktop\ocr\*_with_images.docx'
+SN_FOLDERS_ROOT  = r''           # Parent folder containing WZP* subfolders
+OUTPUT_DOCX      = r''
 
 # Image cell location in the table (0-based indices)
 IMG_ROW = 12     # row 12 = the empty image placeholder
