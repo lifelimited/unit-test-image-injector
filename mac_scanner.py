@@ -349,9 +349,9 @@ if __name__ == "__main__":
     mac_column = 5          # Column E (1-indexed)
     mac_sheet_index = 0     # First sheet
 
-    search_directory      = r"C:\Users\KIE\Desktop\ocr"
-    destination_directory = r"C:\Users\KIE\Desktop\ocr_matched_files"
-    output_text_file      = r"C:\Users\KIE\Desktop\ocr\matched_results.txt"
+    search_directory      = r""
+    destination_directory = r"C"
+    output_text_file      = r""
 
     # Set True to print per-image OCR tokens (useful for threshold tuning)
     DEBUG = False
